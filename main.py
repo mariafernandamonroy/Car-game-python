@@ -50,27 +50,38 @@ def play_game(game, collection):
     winner_cont = 0
     print("Empezando el juego...")
     flag = True
+    out = False
     while flag:
-        player_name, query_player_name, won_games, old_position_distance = star_game(collection)
-        actual_position, game_track_limit = moving_forward(game, collection, query_player_name, old_position_distance)
+        out, player_name, query_player_name, game_found = initialization(collection, out)
+        if out: continue
+        won_games, old_position_distance = star_game(game_found)
+        actual_position, game_track_limit = moving_forward(game, old_position_distance)
+        update_position_distance(actual_position, collection, query_player_name)
         winners,winner_cont = end_game(player_name, actual_position, game_track_limit, winners, winner_cont)
-        winners_positions(collection, query_player_name, winners, winner_cont)
+        flag = winners_positions(collection, query_player_name, winners, winner_cont)
+        if not flag: break
 
-def star_game(collection):
-    global won_games, old_position_distance
+
+def initialization(collection, out):
     player_name = str(input('Ingrese el nombre del jugador que va a tirar el dado: '))
     query_player_name = {"players.player_name": player_name}
-    game_by_player_name = collection.find(query_player_name)
-    # print(game_by_player_name)
-    for game_found in game_by_player_name:
-        player_attributes = game_found['players']
-        print(player_attributes)
-        won_games = player_attributes.get("won_games")
-        old_position_distance = player_attributes.get("position_distance")
-        print("Tu carro es el número: ", player_attributes.get("car"))
-    return player_name, query_player_name, won_games, old_position_distance
+    game_found = collection.find_one(query_player_name)
+    if game_found is None:
+        print("Ese no es un nombre valido")
+        out = True
+    return out, player_name, query_player_name, game_found
 
-def moving_forward(game, collection, query_player_name, old_position_distance):
+
+def star_game(game_found):
+    global won_games, old_position_distance
+    player_attributes = game_found['players']
+    won_games = player_attributes.get("won_games")
+    old_position_distance = player_attributes.get("position_distance")
+    print("Tu carro es el número: ", player_attributes.get("car"))
+    return won_games, old_position_distance
+
+
+def moving_forward(game, old_position_distance):
     print("***Tirando el dado...***")
     number_dice = random.randint(1, 6)
     print("El resultado del dado es: ", number_dice)
@@ -79,10 +90,14 @@ def moving_forward(game, collection, query_player_name, old_position_distance):
     game_track_limit = game.get_track_limit()
     if actual_position > game_track_limit:
         actual_position = game_track_limit
-    update_position_distance = {"$set": {"players.position_distance": actual_position}}
-    collection.update_many(query_player_name, update_position_distance)
-    print("Tu posición actual es: ", actual_position)
     return actual_position, game_track_limit
+
+
+def update_position_distance(actual_position, collection, query_player_name):
+    new_position_distance = {"$set": {"players.position_distance": actual_position}}
+    collection.update_many(query_player_name, new_position_distance)
+    print("Tu posición actual es: ", actual_position)
+
 
 def end_game(player_name, actual_position, game_track_limit, winners, winner_cont):
     if actual_position == game_track_limit:
@@ -92,7 +107,9 @@ def end_game(player_name, actual_position, game_track_limit, winners, winner_con
         winner_cont = winner_cont + 1
     return winners,winner_cont
 
+
 def winners_positions(collection, query_player_name, winners, winner_cont):
+    flag = True
     if winner_cont == 1:
         update_won_games = {"$set": {"players.won_games": won_games+1}}
         collection.update_many(query_player_name, update_won_games)
@@ -109,7 +126,7 @@ def winners_positions(collection, query_player_name, winners, winner_cont):
               " Segundo puesto: ", winners[1],
               " Tercer puesto: ", winners[2])
         flag = False
-
+    return flag
 
 
 
