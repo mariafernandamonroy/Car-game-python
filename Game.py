@@ -22,5 +22,10 @@ class Game:
     def set_players(self, players):
         self._players = players
 
-
+    def to_db_collection(self):
+        return {
+            "id": self._id,
+            "track_limit": self._track_limit,
+            "players": self._players
+        }
 

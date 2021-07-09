@@ -42,3 +42,13 @@ class Player:
 
     def set_podium_position(self, podium_position):
         self._podium_position = podium_position
+
+    def to_db_collection(self):
+        return {
+            "player_name": self._player_name,
+            "car": self._car,
+            "rail": self._rail,
+            "position_distance": self._position_distance,
+            "won_games": self._won_games,
+            "podium_position": self._podium_position,
+        }
