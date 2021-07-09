@@ -11,13 +11,8 @@ def run():
     db = db.get_database()
     collection = db.Car_Game_Players
     create_game(game, player, collection)
-    #while(True):
-    play_game(game, collection)
-    #question = str(input(
-    # "Quiere volver a jugar?
-    #      [Si] o [No])
-    #if question == "No": break
-    #Borrar datos (set initial values (0))
+    restart_game(game,collection)
+
 
 def create_game(game, player, collection):
     print("Creando el juego ...")
@@ -45,7 +40,6 @@ def player_initialization(game, player, collection):
 
 
 def play_game(game, collection):
-
     winners = []
     winner_cont = 0
     print("Empezando el juego...")
@@ -129,8 +123,43 @@ def winners_positions(collection, query_player_name, winners, winner_cont):
     return flag
 
 
+def restart_game(game,collection):
+    while True:
+        play_game(game, collection)
+        question = str(input(
+            "Quiere volver a jugar?"
+            "[Si] o [No]"))
+        if question == "No":
+            print("RESUMEN DEL JUEGO")
+            won_games_players(collection)
+            print("Gracias por jugar")
+            drop_database(collection)
+            break
+        elif question == "Si":
+            set_default_values(collection)
+        else:
+            print("No es una respuesta valida")
 
 
+def won_games_players(collection):
+    all_games = collection.find()
+    for game in all_games:
+        players = game.get('players')
+        player_name = players.get('player_name')
+        player_won_games = players.get('won_games')
+        print("{} ganó {} veces".format(player_name,player_won_games))
+
+def set_default_values(collection):
+    all_games = collection.find()
+    for game in all_games:
+        players = game.get('players')
+        player_name = players.get('player_name')
+        collection.update_many({"players.player_name": player_name}, {"$set": {'players.position_distance': 0}})
+        collection.update_many({"players.player_name": player_name}, {"$set": {'players.podium_position': 0}})
+
+
+def drop_database(collection):
+    collection.drop()
 
 
 if __name__ == '__main__':
