@@ -1,2 +1,2 @@
 # Car-game-python
-Console car game
+Console car game in Python for Sofka U
