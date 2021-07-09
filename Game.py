@@ -1,8 +1,8 @@
 class Game:
     def __init__(self):
         self._id = ""
-        self._track_limit = 0
-        self._players = []
+        self._track_limit = 0.0
+        self._players = ""
 
     def get_id(self):
         return self._id
